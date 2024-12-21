@@ -1,5 +1,6 @@
 from confluent_kafka import Consumer
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 import json
 from dotenv import load_dotenv
 import os
@@ -20,8 +21,19 @@ conf = {
 consumer = Consumer(conf)
 consumer.subscribe(['crypto-data'])
 
-# MongoDB Configuration
-mongo_client = MongoClient('<mongodb-connection-string>')
+# MongoDB Configuration with SSL settings
+mongodb_uri = "mongodb+srv://" + os.getenv('MONGODB_USER') + ":" + os.getenv('MONGODB_PASSWORD') + "@" + os.getenv('MONGODB_CLUSTER') + ".2cuow.mongodb.net/?retryWrites=true&w=majority&appName=" + os.getenv('MONGODB_CLUSTER') 
+
+# Add SSL certificate verification bypass
+if "?" in mongodb_uri:
+    mongodb_uri += "&tlsAllowInvalidCertificates=true"
+else:
+    mongodb_uri += "?tlsAllowInvalidCertificates=true"
+
+mongo_client = MongoClient(
+    mongodb_uri,
+    server_api=ServerApi('1')
+)
 db = mongo_client['CryptoData']
 collection = db['Prices']
 
